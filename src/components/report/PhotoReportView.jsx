@@ -66,6 +66,7 @@ const ReportCoverPage = ({ company, totalItems, onUpdateCompany, isEditing = fal
     const [localAddress, setLocalAddress] = useState(company.address || '');
     const [isUploadingFacade, setIsUploadingFacade] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const dragCounter = useRef(0);
     const facadeInputRef = useRef(null);
 
     const handleFacadeUpload = async (e) => {
@@ -74,6 +75,14 @@ const ReportCoverPage = ({ company, totalItems, onUpdateCompany, isEditing = fal
             e.preventDefault();
             setIsDragging(false);
             file = e.dataTransfer.files[0];
+        } else if (e.type === 'paste') {
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    file = items[i].getAsFile();
+                    break;
+                }
+            }
         } else {
             file = e.target.files?.[0];
         }
@@ -97,14 +106,37 @@ const ReportCoverPage = ({ company, totalItems, onUpdateCompany, isEditing = fal
         }
     };
 
-    const onDragOver = (e) => {
+    const onDragEnter = (e) => {
         if (!isEditing) return;
         e.preventDefault();
+        e.stopPropagation();
+        dragCounter.current++;
         setIsDragging(true);
     };
 
-    const onDragLeave = () => {
+    const onDragOver = (e) => {
+        if (!isEditing) return;
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const onDragLeave = (e) => {
+        if (!isEditing) return;
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter.current--;
+        if (dragCounter.current <= 0) {
+            dragCounter.current = 0;
+            setIsDragging(false);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter.current = 0;
         setIsDragging(false);
+        handleFacadeUpload(e);
     };
 
     const handleFieldUpdate = (field, value) => {
@@ -188,9 +220,12 @@ const ReportCoverPage = ({ company, totalItems, onUpdateCompany, isEditing = fal
                         <div
                             className={`w-full h-full bg-slate-100 flex items-center justify-center overflow-hidden cursor-pointer group relative print:!block print:!static print:!w-full print:!h-full ${isDragging ? 'ring-4 ring-[var(--report-primary)] ring-inset' : ''}`}
                             onClick={() => isEditing && facadeInputRef.current?.click()}
+                            onDragEnter={onDragEnter}
                             onDragOver={onDragOver}
                             onDragLeave={onDragLeave}
-                            onDrop={handleFacadeUpload}
+                            onDrop={handleDrop}
+                            onPaste={(e) => isEditing && handleFacadeUpload(e)}
+                            tabIndex={isEditing ? 0 : -1}
                         >
                             <img
                                 src={company.facadePhotoUrl}
@@ -198,7 +233,7 @@ const ReportCoverPage = ({ company, totalItems, onUpdateCompany, isEditing = fal
                                 className="w-full h-full object-cover print:!static print:!object-cover print:!w-full print:!h-full"
                             />
                             {isEditing && (
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center print:hidden">
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center print:hidden pointer-events-none">
                                     <div className="text-white text-sm flex items-center gap-2">
                                         <Upload size={20} />
                                         <span>Cambiar Foto</span>
@@ -214,19 +249,22 @@ const ReportCoverPage = ({ company, totalItems, onUpdateCompany, isEditing = fal
                     ) : (
                         <button
                             onClick={() => facadeInputRef.current?.click()}
+                            onDragEnter={onDragEnter}
                             onDragOver={onDragOver}
                             onDragLeave={onDragLeave}
-                            onDrop={handleFacadeUpload}
+                            onDrop={handleDrop}
+                            onPaste={(e) => isEditing && handleFacadeUpload(e)}
                             disabled={isUploadingFacade || !isEditing}
-                            className={`w-full h-full bg-slate-100 border-2 border-dashed flex flex-col items-center justify-center transition-all print:hidden disabled:opacity-50 ${isDragging ? 'border-[var(--report-primary)] bg-slate-200' : 'border-slate-300 hover:bg-slate-200'}`}
+                            tabIndex={isEditing ? 0 : -1}
+                            className={`w-full h-full bg-slate-100 border-2 border-dashed flex flex-col items-center justify-center transition-all print:hidden disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--report-primary)] ${isDragging ? 'border-[var(--report-primary)] bg-slate-200' : 'border-slate-300 hover:bg-slate-200'}`}
                         >
                             {isUploadingFacade ? (
                                 <Loader2 className="animate-spin text-slate-400" size={48} />
                             ) : (
-                                <>
+                                <div className="flex flex-col items-center pointer-events-none">
                                     <ImageIcon className="text-slate-300 mb-4" size={64} />
                                     <span className="text-slate-400 text-sm">Subir Foto de Fachada</span>
-                                </>
+                                </div>
                             )}
                         </button>
                     )}
@@ -439,8 +477,9 @@ export function PhotoReportView({ company, items, onBack, onUpdateCompany }) {
     const [reportColor, setReportColor] = useState(company.reportColor || '#DB0011');
     const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
     const [reportMode, setReportMode] = useState('single'); // 'single' | 'full'
-    const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isDraggingLogo, setIsDraggingLogo] = useState(false);
+    const logoDragCounter = useRef(0);
     const fileInputRef = useRef(null);
 
     // Sync color if company updates externally (optional but good practice)
@@ -463,6 +502,14 @@ export function PhotoReportView({ company, items, onBack, onUpdateCompany }) {
             e.preventDefault();
             setIsDraggingLogo(false);
             file = e.dataTransfer.files[0];
+        } else if (e.type === 'paste') {
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    file = items[i].getAsFile();
+                    break;
+                }
+            }
         } else {
             file = e.target.files[0];
         }
@@ -487,6 +534,36 @@ export function PhotoReportView({ company, items, onBack, onUpdateCompany }) {
         } finally {
             setIsUploadingLogo(false);
         }
+    };
+
+    const onLogoDragEnter = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        logoDragCounter.current++;
+        setIsDraggingLogo(true);
+    };
+
+    const onLogoDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const onLogoDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        logoDragCounter.current--;
+        if (logoDragCounter.current <= 0) {
+            logoDragCounter.current = 0;
+            setIsDraggingLogo(false);
+        }
+    };
+
+    const onLogoDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        logoDragCounter.current = 0;
+        setIsDraggingLogo(false);
+        handleLogoUpload(e);
     };
 
     const handleRemoveLogo = async (e) => {
@@ -631,11 +708,14 @@ export function PhotoReportView({ company, items, onBack, onUpdateCompany }) {
                                         <img
                                             src={company.logoUrl}
                                             alt="Logo"
-                                            className={`h-8 md:h-10 w-auto object-contain cursor-pointer transition-all ${isDraggingLogo ? 'opacity-50 scale-110' : 'hover:opacity-80'}`}
+                                            className={`h-8 md:h-10 w-auto object-contain cursor-pointer transition-all rounded focus:outline-none focus:ring-2 focus:ring-[var(--report-primary)] focus:ring-offset-2 ${isDraggingLogo ? 'opacity-50 scale-110' : 'hover:opacity-80'}`}
                                             onClick={() => !isUploadingLogo && fileInputRef.current?.click()}
-                                            onDragOver={(e) => { e.preventDefault(); setIsDraggingLogo(true); }}
-                                            onDragLeave={() => setIsDraggingLogo(false)}
-                                            onDrop={handleLogoUpload}
+                                            onDragEnter={onLogoDragEnter}
+                                            onDragOver={onLogoDragOver}
+                                            onDragLeave={onLogoDragLeave}
+                                            onDrop={onLogoDrop}
+                                            onPaste={(e) => !isUploadingLogo && handleLogoUpload(e)}
+                                            tabIndex="0"
                                         />
                                         {/* X Button to remove logo */}
                                         <button
@@ -657,11 +737,13 @@ export function PhotoReportView({ company, items, onBack, onUpdateCompany }) {
                                 ) : (
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
-                                        onDragOver={(e) => { e.preventDefault(); setIsDraggingLogo(true); }}
-                                        onDragLeave={() => setIsDraggingLogo(false)}
-                                        onDrop={handleLogoUpload}
+                                        onDragEnter={onLogoDragEnter}
+                                        onDragOver={onLogoDragOver}
+                                        onDragLeave={onLogoDragLeave}
+                                        onDrop={onLogoDrop}
+                                        onPaste={(e) => !isUploadingLogo && handleLogoUpload(e)}
                                         disabled={isUploadingLogo}
-                                        className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center border border-dashed rounded transition-all group relative overflow-hidden ${isDraggingLogo ? 'bg-[var(--report-primary)]/20 border-[var(--report-primary)] scale-110' : 'bg-slate-100 border-slate-300 hover:bg-slate-200'}`}
+                                        className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center border border-dashed rounded transition-all group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-[var(--report-primary)] ${isDraggingLogo ? 'bg-[var(--report-primary)]/20 border-[var(--report-primary)] scale-110' : 'bg-slate-100 border-slate-300 hover:bg-slate-200'}`}
                                         title="Subir Logo"
                                     >
                                         {isUploadingLogo ? (

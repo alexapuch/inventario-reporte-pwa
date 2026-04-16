@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Upload, Check, Camera, Loader2, Clock, CloudOff, Trash2 } from 'lucide-react';
@@ -12,10 +12,12 @@ export function PhotoEvidenceModal({ isOpen, onClose, item, onUpdate }) {
     const [uploadingIndex, setUploadingIndex] = useState(null);
     const [isBulkUploading, setIsBulkUploading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const dragCounter = React.useRef(0);
 
-    const handleDragOver = (e) => {
+    const handleDragEnter = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        dragCounter.current++;
         if (!isBulkUploading && uploadingIndex === null) {
             setIsDragging(true);
         }
@@ -24,12 +26,22 @@ export function PhotoEvidenceModal({ isOpen, onClose, item, onUpdate }) {
     const handleDragLeave = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        setIsDragging(false);
+        dragCounter.current--;
+        if (dragCounter.current <= 0) {
+            dragCounter.current = 0;
+            setIsDragging(false);
+        }
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
     };
 
     const handleDrop = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        dragCounter.current = 0;
         setIsDragging(false);
 
         const files = e.dataTransfer.files;
@@ -37,6 +49,33 @@ export function PhotoEvidenceModal({ isOpen, onClose, item, onUpdate }) {
             handleBulkUpload(files);
         }
     };
+
+    const handlePaste = (e) => {
+        if (!isOpen) return;
+        const items = e.clipboardData.items;
+        const files = [];
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const blob = items[i].getAsFile();
+                if (blob) {
+                    const file = new File([blob], `pasted_image_${Date.now()}.${blob.type.split('/')[1]}`, { type: blob.type });
+                    files.push(file);
+                }
+            }
+        }
+        if (files.length > 0) {
+            handleBulkUpload(files);
+        }
+    };
+
+    useEffect(() => {
+        if (isOpen) {
+            window.addEventListener('paste', handlePaste);
+        }
+        return () => {
+            window.removeEventListener('paste', handlePaste);
+        };
+    }, [isOpen]);
 
     // item.photos is array of URLs.
     const currentPhotos = Array(item.count).fill(null).map((_, i) => (item.photos && item.photos[i]) || null);
@@ -223,13 +262,14 @@ export function PhotoEvidenceModal({ isOpen, onClose, item, onUpdate }) {
         >
             <div 
                 className="space-y-4 relative min-h-[200px]"
+                onDragEnter={handleDragEnter}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
             >
                 {isDragging && (
                     <div className="absolute inset-x-0 -inset-y-2 z-50 bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-xl flex flex-col items-center justify-center backdrop-blur-[2px] animate-in fade-in zoom-in duration-200">
-                        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-xl border border-blue-100 dark:border-blue-900/30 flex flex-col items-center gap-3">
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-xl border border-blue-100 dark:border-blue-900/30 flex flex-col items-center gap-3 pointer-events-none">
                             <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
                                 <Upload size={32} className="text-blue-500 animate-bounce" />
                             </div>
