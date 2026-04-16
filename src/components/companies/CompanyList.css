@@ -1,0 +1,133 @@
+.company-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-lg);
+    padding: var(--space-md) 0;
+}
+
+/* Project Card Redesign */
+.project-card {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 200px;
+    padding: 0 !important;
+    /* Override default card padding if needed */
+}
+
+.project-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-accent);
+}
+
+.project-card-header {
+    padding: var(--space-lg) var(--space-lg) 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.project-icon {
+    width: 48px;
+    height: 48px;
+    background-color: #eff6ff;
+    color: var(--color-accent);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.project-card-body {
+    padding: var(--space-md) var(--space-lg);
+    flex: 1;
+}
+
+.project-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-sm);
+}
+
+.project-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.meta-item {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.project-card-footer {
+    padding: var(--space-md) var(--space-lg);
+    border-top: 1px solid #f1f5f9;
+    background-color: #fafafa;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.open-project-btn {
+    font-weight: 500;
+    color: var(--color-accent);
+    background: none;
+    padding: 0;
+}
+
+.open-project-btn:hover {
+    text-decoration: underline;
+}
+
+/* Actions */
+.icon-action-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    transition: all 0.2s;
+    opacity: 0.6;
+}
+
+.icon-action-btn:hover {
+    background-color: #f1f5f9;
+    opacity: 1;
+}
+
+.icon-action-btn.delete:hover {
+    color: var(--color-danger);
+    background-color: #fef2f2;
+}
+
+
+.empty-state {
+    text-align: center;
+    padding: 4rem;
+    color: var(--color-text-secondary);
+    background-color: white;
+    border-radius: var(--radius-lg);
+    border: 2px dashed #e2e8f0;
+    margin-top: var(--space-lg);
+}
+
+.empty-icon {
+    margin-bottom: var(--space-md);
+    color: #cbd5e1;
+}
+
+.empty-state h3 {
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-sm);
+    font-size: 1.5rem;
+}

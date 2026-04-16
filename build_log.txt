@@ -1,0 +1,17 @@
+﻿
+> inventario@0.0.0 build
+> vite build --debug
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mÔ£ô[39m 2009 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mregisterSW.js                 [39m[1m[2m    0.13 kB[22m[1m[22m
+[2mdist/[22m[32mmanifest.webmanifest          [39m[1m[2m    0.38 kB[22m[1m[22m
+[2mdist/[22m[32mindex.html                    [39m[1m[2m    1.10 kB[22m[1m[22m[2m Ôöé gzip:   0.57 kB[22m
+[2mdist/[22m[35massets/index-DlmdyRfd.css     [39m[1m[2m   55.17 kB[22m[1m[22m[2m Ôöé gzip:   9.79 kB[22m
+[2mdist/[22m[36massets/purify.es-Bzr520pe.js  [39m[1m[2m   22.45 kB[22m[1m[22m[2m Ôöé gzip:   8.63 kB[22m
+[2mdist/[22m[36massets/index.es-BTNqWMYo.js   [39m[1m[2m  158.58 kB[22m[1m[22m[2m Ôöé gzip:  52.93 kB[22m
+[2mdist/[22m[36massets/index-CJ8CDuXc.js      [39m[1m[33m2,239.41 kB[39m[22m[2m Ôöé gzip: 665.28 kB[22m
+[32mÔ£ô built in 13.12s[39m

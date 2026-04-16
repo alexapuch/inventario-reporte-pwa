@@ -1,0 +1,491 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-display antialiased text-slate-900 bg-background-light dark:bg-background-dark dark:text-slate-100 transition-colors duration-200;
+  }
+
+  /* Optimize touch targets for iOS - Removes 300ms delay */
+  a,
+  button,
+  input,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+@media print
+/* NUCLEAR PRINT RESET */
+  {
+  @page {
+    size: auto;
+    margin: 5mm;
+    /* Minimal margin to prevent browser adding own large ones */
+  }
+
+  html,
+  body {
+    width: 100% !important;
+    height: auto !important;
+    /* Allow height to flow */
+    overflow-x: hidden !important;
+    /* Kill horizontal scroll/pages */
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #ffffff !important;
+  }
+
+  /* Force content to fit */
+  * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Explicit Print Grids */
+  .print-grid-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+    width: 100% !important;
+  }
+
+  .print-grid-3 {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+  }
+
+  /* Force block display for wrappers in print to avoid flex weirdness */
+  .print-block {
+    display: block !important;
+  }
+
+  /* Utilities for html2pdf */
+  .page-break-after {
+    page-break-after: always;
+    display: block;
+    /* Ensure it behaves as a block for the break */
+  }
+
+  /* Reset layouts that might interfere */
+  .h-screen,
+  .overflow-hidden {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .overflow-y-auto {
+    overflow: visible !important;
+  }
+
+  /* Ensure backgrounds print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Asegurar saltos de pÃ¡gina limpios */
+  .page-break {
+    page-break-before: always;
+    break-before: page;
+    display: block;
+    height: 0;
+  }
+
+  /* Avoid breaking inside elements */
+  .break-inside-avoid {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Ocultar interfaz de la app - MOVED TO BOTTOM TO WIN SPECIFICITY */
+  aside,
+  nav,
+  header,
+  .sidebar,
+  .menu-lateral,
+  .botones-accion,
+  .no-print,
+  .flex-shrink-0.border-r {
+    display: none !important;
+  }
+}
+
+/* ========================================
+   SMART MOSAIC LAYOUT ENGINE
+   Fixed aspect ratio containers (4:3)
+   Intelligent grid adaptation by photo count
+   ======================================== */
+
+/* Shared Photo Card Base Styles */
+.photo-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.dark .photo-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+/* Image container with fixed 9:16 aspect ratio (vertical mobile photos) */
+.photo-card .photo-image {
+  position: relative;
+  aspect-ratio: 9 / 16 !important;
+  width: 100%;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.photo-card img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* ========================================
+    ADAPTIVE PHOTO GRID LAYOUTS
+    Base grid with responsive breakpoints
+    ======================================== */
+
+/* Base photo-grid - fallback if no layout class applied */
+.photo-grid {
+  display: block;
+  width: 100%;
+}
+
+/* HERO LAYOUT - Single Photo */
+.photo-grid.layout-hero {
+  display: flex !important;
+  justify-content: center !important;
+  padding: 1rem;
+}
+
+.photo-grid.layout-hero .photo-card {
+  width: 100% !important;
+  max-width: 600px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* ROW LAYOUT - 2-3 Photos */
+.photo-grid.layout-row {
+  display: flex !important;
+  gap: 12px !important;
+  padding: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.photo-grid.layout-row .photo-card {
+  flex: 1 !important;
+  min-width: 200px !important;
+  max-width: 350px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* MOSAIC LAYOUT - 4-6 Photos (Like HSBC) */
+.photo-grid.layout-mosaic {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 10px !important;
+  padding: 0.5rem;
+}
+
+.photo-grid.layout-mosaic .photo-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* COMPACT LAYOUT - 7+ Photos */
+.photo-grid.layout-compact {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 8px !important;
+  padding: 0.25rem;
+}
+
+.photo-grid.layout-compact .photo-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Hover Effects */
+.photo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.2s ease;
+}
+
+/* Print-specific overrides - Absolute Reset Strategy */
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  /* 1. Reset Root */
+  html,
+  body {
+    background-color: white !important;
+    background: white !important;
+    height: 100vh !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* 2. Hide EVERYTHING by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* 3. Show ONLY the report wrapper and its children */
+  .report-outer-wrapper,
+  .report-outer-wrapper * {
+    visibility: visible;
+  }
+
+  /* 4. Position the wrapper to fill the paper absolutely */
+  .report-outer-wrapper {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    z-index: 9999;
+  }
+
+  /* 5. Force content width */
+  .report-main-container,
+  .section-to-print,
+  main {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* 6. Layout Fixes for Grid */
+  .photo-grid {
+    display: grid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Remove any transforms that might cause scaling issues */
+  * {
+    transform: none !important;
+  }
+
+  /* Preserve grid layouts in print */
+  .photo-grid.layout-hero {
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  .photo-grid.layout-row {
+    display: flex !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* Aesthetic & Compact 2x2 Grid for 4 photos - GRID 2x2 */
+  .photo-grid.layout-quad {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    justify-items: center !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    gap: 24px 80px !important;
+  }
+
+  /* Shrink wrapper to fit image width (User Request) */
+  .photo-grid.layout-quad>* {
+    width: fit-content !important;
+    max-width: 100% !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* CRITICAL: Force height text limit for 2x2 grid to ensure page fit */
+  .photo-grid.layout-quad img {
+    max-height: 520px !important;
+    /* ULTRA AGGRESSIVE: 450px -> 520px to touch bottom edge */
+    width: auto !important;
+    max-width: 100% !important;
+    object-fit: contain !important;
+    margin: 0 auto !important;
+    position: relative !important;
+    height: auto !important;
+  }
+
+  /* Smart Mosaic (5-6 photos): Structural Decoupling */
+  /* 1. Structural Container */
+  .photo-grid.layout-mosaic {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    /* Spacing Refinement: More vertical space, balanced horizontal */
+    row-gap: 60px !important;
+    column-gap: 40px !important;
+  }
+
+  .photo-grid.layout-mosaic>* {
+    width: 30% !important;
+    /* Slightly reduced (90% + gaps) to allow perfect centering */
+    flex: 0 0 auto !important;
+    display: flex !important;
+    justify-content: center !important;
+
+    /* Decouple Visuals */
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  /* 2. Visual Card (Inner) */
+  .photo-grid.layout-mosaic .photo-image {
+    width: fit-content !important;
+    background: white !important;
+    padding: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+    border-radius: 0.5rem !important;
+
+    position: relative !important;
+    height: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  /* Image Sizing */
+  .photo-grid.layout-mosaic img {
+    max-height: 420px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    object-fit: contain !important;
+    margin: 0 auto !important;
+    position: relative !important;
+    height: auto !important;
+    display: block !important;
+  }
+
+  /* Print Override */
+  @media print {
+    .photo-grid.layout-mosaic .photo-image {
+      box-shadow: none !important;
+      border: 1px solid #cbd5e1 !important;
+    }
+  }
+
+  /* Reset container height for Quad ONLY (Mosaic handled above) */
+  .photo-grid.layout-quad .photo-image {
+    height: auto !important;
+    aspect-ratio: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    background: transparent !important;
+  }
+
+  .photo-grid.layout-compact {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* Ensure photo cards are visible and don't break across pages */
+  .photo-card {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Ensure images are visible in print */
+  .photo-card .photo-image {
+    display: block !important;
+    aspect-ratio: 9 / 16 !important;
+    overflow: visible !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  .photo-card img {
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  .photo-card:hover {
+    transform: none !important;
+  }
+
+  /* Page break after each item type block */
+  /* Smart Layout: Avoid breaking blocks internally, but allow flow between them */
+  .item-type-block {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    break-after: auto !important;
+    page-break-after: auto !important;
+    margin-bottom: 3rem !important;
+    display: block !important;
+  }
+
+  /* Force page break only between ZONES */
+  .zone-section {
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  /* Ensure the header doesn't get stranded efficiently */
+  .report-header {
+    break-inside: avoid !important;
+  }
+
+  /* Don't break after the last item type in a zone */
+  .item-type-block:last-child {
+    margin-bottom: 0 !important;
+  }
+}
