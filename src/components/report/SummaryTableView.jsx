@@ -30,7 +30,6 @@ export function SummaryTableView({ company, items, onBack }) {
     };
 
     // Filter and THEN Expand
-    // Filter and THEN Expand
     // STRICT FILTER: Only items with at least one photo.
     // EXCLUDE Special Zone (Changes)
     const hasPhotos = i => i.photos && i.photos.length > 0;
@@ -124,3 +123,4 @@ export function SummaryTableView({ company, items, onBack }) {
         </div>
     );
 }
+
