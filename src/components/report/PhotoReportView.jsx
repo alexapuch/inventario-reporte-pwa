@@ -150,6 +150,21 @@ const ReportCoverPage = ({ company, totalItems, onUpdateCompany, isEditing = fal
         year: 'numeric'
     });
 
+    useEffect(() => {
+        if (!isEditing) return;
+        const handleGlobalPaste = (e) => {
+            if (!e.clipboardData) return;
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    handleFacadeUpload(e);
+                    break;
+                }
+            }
+        };
+        window.addEventListener('paste', handleGlobalPaste);
+        return () => window.removeEventListener('paste', handleGlobalPaste);
+    }, [isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
 
@@ -264,6 +279,7 @@ const ReportCoverPage = ({ company, totalItems, onUpdateCompany, isEditing = fal
                                 <div className="flex flex-col items-center pointer-events-none">
                                     <ImageIcon className="text-slate-300 mb-4" size={64} />
                                     <span className="text-slate-400 text-sm">Subir Foto de Fachada</span>
+                                    <span className="text-slate-300 text-xs mt-1">o pega con Ctrl+V</span>
                                 </div>
                             )}
                         </button>
