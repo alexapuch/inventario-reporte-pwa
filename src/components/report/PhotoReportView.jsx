@@ -174,9 +174,9 @@ const ReportCoverPage = ({ company, totalItems, onUpdateCompany, isEditing = fal
 
             {/* Main Cover Page Card - STRICT HEIGHT & OVERFLOW */}
             {/* Main Cover Page Card - BRUTE FORCE BLOCK LAYOUT */}
-            <div className="bg-white dark:bg-slate-900 shadow-xl mb-8 section-to-print relative overflow-hidden text-slate-900 
-                flex flex-col 
-                print:!block print:!h-[260mm] print:!max-h-[260mm] print:!border-[8px] print:!border-[var(--report-primary)] print:break-inside-avoid print:!shadow-none">
+            <div className="bg-white dark:bg-slate-900 shadow-xl mb-8 section-to-print capture-page relative overflow-hidden text-slate-900 
+                flex flex-col mx-auto w-full max-w-[794px] min-h-[1123px]
+                print:!block print:!max-w-none print:!min-h-0 print:!h-[260mm] print:!max-h-[260mm] print:!border-[8px] print:!border-[var(--report-primary)] print:break-inside-avoid print:!shadow-none">
 
                 {/* Hidden file input for facade */}
                 <input
@@ -354,136 +354,130 @@ const ReportCoverPage = ({ company, totalItems, onUpdateCompany, isEditing = fal
 
 
 // Component: Single Zone Page (Reusable for both modes)
-// Now handles internal pagination if photos > 6
+// Now handles internal pagination if photos > 6 and wraps each page in .capture-page
 const ZoneReportPage = ({ zone, items, companyName, logoUrl }) => {
     const groupedItems = groupItemsByName(items);
+    const itemEntries = Object.entries(groupedItems);
+
+    if (itemEntries.length === 0) {
+        return (
+            <div className="capture-page mx-auto w-full max-w-[794px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl min-h-[1123px] print:!min-h-0 print:!h-auto flex flex-col mb-8 print:!mb-0 print:!shadow-none print:!border-none section-to-print block print:!w-full print:!max-w-none print:!m-0 print:!bg-white">
+                <ZoneReportHeader zone={zone} companyName={companyName} logoUrl={logoUrl} />
+                <div className="p-8 text-center py-12 text-slate-400 flex-grow">
+                    No hay elementos registrados en esta zona.
+                </div>
+                <div className="p-8 border-t border-slate-200 dark:border-slate-800 mt-auto flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] print:text-slate-600">
+                    <div>CONFIDENCIAL - {companyName} {new Date().getFullYear()}</div>
+                    <div className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded print:bg-transparent">REPORTE GENERADO INTERNAMENTE</div>
+                </div>
+            </div>
+        );
+    }
+
+    const pages = [];
+    
+    itemEntries.forEach(([itemName, itemsList], itemIndex) => {
+        const allPhotos = itemsList.flatMap(item => (item.photos || []).filter(Boolean));
+        const photoChunks = chunk(allPhotos, 6);
+        const notes = itemsList.map(i => i.notes).filter(Boolean);
+
+        if (photoChunks.length === 0 && itemsList.length > 0) {
+            photoChunks.push([]);
+        }
+
+        photoChunks.forEach((chunkPhotos, pageIndex) => {
+            const isContinuation = pageIndex > 0;
+            const isFirstOverall = itemIndex === 0 && pageIndex === 0;
+            
+            pages.push({
+                itemName,
+                chunkPhotos,
+                pageIndex,
+                isContinuation,
+                isFirstOverall,
+                notes,
+                totalPhotos: allPhotos.length,
+                totalChunks: photoChunks.length
+            });
+        });
+    });
 
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl min-h-[1100px] print:!min-h-0 print:!h-auto flex flex-col mb-8 print:!mb-0 print:!shadow-none print:!border-none section-to-print block print:!w-full print:!max-w-none print:!m-0 print:!bg-white">
-            {/* Main Header */}
-            <ZoneReportHeader zone={zone} companyName={companyName} logoUrl={logoUrl} />
+        <div className="zone-wrapper block print:!w-full print:!max-w-none print:!m-0">
+            {pages.map((page, idx) => {
+                const { itemName, chunkPhotos, pageIndex, isContinuation, isFirstOverall, notes, totalPhotos, totalChunks } = page;
+                const layoutClass = getLayoutClass(chunkPhotos.length);
+                const needsHeader = !isFirstOverall;
 
-            <div className={`p-8 print:!p-4 space-y-12 print:!space-y-4 flex-grow ${items.length > 20 ? 'content-visibility-auto' : ''}`} style={items.length > 20 ? { contentVisibility: 'auto' } : {}}>
-                {Object.entries(groupedItems).map(([itemName, itemsList], itemIndex) => {
-                    const allPhotos = itemsList.flatMap(item => (item.photos || []).filter(Boolean));
+                return (
+                    <div key={idx} className="capture-page mx-auto w-full max-w-[794px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl min-h-[1123px] print:!min-h-0 print:!h-auto flex flex-col mb-8 print:!mb-0 print:!shadow-none print:!border-none section-to-print block print:!w-full print:!max-w-none print:!m-0 print:!bg-white print:break-after-page">
+                        
+                        {isFirstOverall ? (
+                             <ZoneReportHeader zone={zone} companyName={companyName} logoUrl={logoUrl} />
+                        ) : (
+                             <div className="print:mt-0">
+                                 <div className="print:hidden h-8 bg-slate-100 dark:bg-white/5 my-4 flex items-center justify-center text-xs text-slate-400 uppercase font-bold tracking-widest border-y border-dashed border-slate-300">
+                                     Salto de Página Automático
+                                 </div>
+                                 <ZoneReportHeader
+                                     zone={zone}
+                                     companyName={companyName}
+                                     logoUrl={logoUrl}
+                                     isContinuation={isContinuation}
+                                 />
+                                 <div className="h-4"></div>
+                             </div>
+                        )}
 
-                    // PAGINATION LOGIC: Split into chunks of 6
-                    const photoChunks = chunk(allPhotos, 6);
-                    const notes = itemsList.map(i => i.notes).filter(Boolean);
+                        <div className="p-8 print:!p-4 flex-grow">
+                            <div className={`mb-8 print:!mb-4 item-type-block ${needsHeader ? 'print:!mt-4' : ''}`}>
+                                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-slate-800 pb-2 mb-4 print:!mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-6 bg-[var(--report-primary)]"></div>
+                                        <h4 className="text-lg font-bold uppercase tracking-tight text-slate-800 dark:text-slate-100 print:text-black">
+                                            TIPO: {itemName} {isContinuation ? '(CONT.)' : ''}
+                                        </h4>
+                                    </div>
+                                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                                        {isContinuation
+                                            ? `Pág. ${pageIndex + 1}/${totalChunks}`
+                                            : `${totalPhotos} ${totalPhotos === 1 ? 'foto' : 'fotos'}`}
+                                    </span>
+                                </div>
 
-                    // If no photos, still allow rendering (handled by chunk logic or fallback)
-                    if (photoChunks.length === 0 && itemsList.length > 0) {
-                        // Mock empty chunk to render fallback
-                        photoChunks.push([]);
-                    }
-
-                    return (
-                        <React.Fragment key={itemName}>
-                            {photoChunks.map((chunkPhotos, pageIndex) => {
-                                const isContinuation = pageIndex > 0;
-                                const isNewEquipmentType = itemIndex > 0 && pageIndex === 0; // New equipment after first
-                                const needsHeader = isContinuation || isNewEquipmentType;
-                                const layoutClass = getLayoutClass(chunkPhotos.length);
-
-                                return (
-                                    <React.Fragment key={`${itemName}-page-${pageIndex}`}>
-                                        {/* Render Header on: 1) Equipment type change, 2) Photo continuation */}
-                                        {needsHeader && (
-                                            <div className="print:break-before-page mt-8 print:mt-0">
-                                                <div className="print:hidden h-8 bg-slate-100 dark:bg-white/5 my-4 flex items-center justify-center text-xs text-slate-400 uppercase font-bold tracking-widest border-y border-dashed border-slate-300">
-                                                    Salto de Página Automático
-                                                </div>
-                                                {/* Re-render Full Header for Professional Membrete */}
-                                                <ZoneReportHeader
-                                                    zone={zone}
-                                                    companyName={companyName}
-                                                    logoUrl={logoUrl}
-                                                    isContinuation={isContinuation}
-                                                />
-                                                <div className="h-4"></div>
+                                <div className={`photo-grid ${layoutClass}`}>
+                                    {chunkPhotos.map((photoUrl, pIdx) => (
+                                        <div key={pIdx} className="photo-card">
+                                            <div className="photo-image">
+                                                <img alt={`${itemName} ${pIdx + 1}`} src={photoUrl} loading="eager" decoding="async" />
                                             </div>
-                                        )}
-
-                                        <div className={`mb-8 print:!mb-4 item-type-block ${needsHeader ? 'print:!mt-4' : ''}`}>
-                                            <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-slate-800 pb-2 mb-4 print:!mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-6 bg-[var(--report-primary)]"></div>
-                                                    <h4 className="text-lg font-bold uppercase tracking-tight text-slate-800 dark:text-slate-100 print:text-black">
-                                                        TIPO: {itemName} {isContinuation ? '(CONT.)' : ''}
-                                                    </h4>
-                                                </div>
-                                                <span className="text-sm text-slate-500 dark:text-slate-400">
-                                                    {isContinuation
-                                                        ? `Pág. ${pageIndex + 1}/${photoChunks.length}`
-                                                        : `${allPhotos.length} ${allPhotos.length === 1 ? 'foto' : 'fotos'}`}
-                                                </span>
-                                            </div>
-
-                                            {/* Adaptive Smart Grid Layout */}
-                                            <div className={`photo-grid ${layoutClass}`}>
-                                                {chunkPhotos.map((photoUrl, idx) => {
-                                                    // Find original item context if possible? 
-                                                    // We flattened the array, so we lost exact item ref.
-                                                    // But we can approximate or just use generic ref.
-                                                    // For simple display, generic is fine.
-                                                    return (
-                                                        <div
-                                                            key={`${itemName}-${pageIndex}-${idx}`}
-                                                            className="photo-card"
-                                                        >
-                                                            <div className="photo-image">
-                                                                <img
-                                                                    alt={`${itemName} ${idx + 1}`}
-                                                                    src={photoUrl}
-                                                                    loading="eager"
-                                                                    decoding="async"
-                                                                />
-                                                            </div>
-                                                            {/* Footer removed per user request (redundant Ref) */}
-                                                        </div>
-                                                    );
-                                                })}
-
-                                                {/* Fallback if no photos in any item of this group (Only on first page) */}
-                                                {!isContinuation && chunkPhotos.length === 0 && (
-                                                    <div className="aspect-[4/3] bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 col-span-full rounded-lg">
-                                                        <span className="text-slate-400 text-xs italic font-medium">Sin imágenes capturadas</span>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Observations - Render only on first page or appropriately? 
-                                                Usually observations go at the end? Or at the start? 
-                                                Let's keep them on the FIRST page for visibility usually.
-                                            */}
-                                            {!isContinuation && notes.length > 0 && (
-                                                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 border-l-4 border-slate-300 dark:border-slate-600 print:bg-white print:border-slate-300 break-inside-avoid w-full mt-4">
-                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2 print:text-black">Observaciones: {itemName}</label>
-                                                    <div className="text-sm text-slate-700 dark:text-slate-300 min-h-[2rem] whitespace-pre-wrap print:text-black">
-                                                        {notes.join('\n---\n')}
-                                                    </div>
-                                                </div>
-                                            )}
                                         </div>
-                                    </React.Fragment>
-                                );
-                            })}
-                        </React.Fragment>
-                    );
-                })}
+                                    ))}
+                                    {!isContinuation && chunkPhotos.length === 0 && (
+                                        <div className="aspect-[4/3] bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 col-span-full rounded-lg">
+                                            <span className="text-slate-400 text-xs italic font-medium">Sin imágenes capturadas</span>
+                                        </div>
+                                    )}
+                                </div>
 
-                {Object.keys(groupedItems).length === 0 && (
-                    <div className="text-center py-12 text-slate-400">
-                        No hay elementos registrados en esta zona.
+                                {!isContinuation && notes.length > 0 && (
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-4 border-l-4 border-slate-300 dark:border-slate-600 print:bg-white print:border-slate-300 break-inside-avoid w-full mt-4">
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2 print:text-black">Observaciones: {itemName}</label>
+                                        <div className="text-sm text-slate-700 dark:text-slate-300 min-h-[2rem] whitespace-pre-wrap print:text-black">
+                                            {notes.join('\n---\n')}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="p-8 border-t border-slate-200 dark:border-slate-800 mt-auto flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] print:text-slate-600">
+                            <div>CONFIDENCIAL - {companyName} {new Date().getFullYear()}</div>
+                            <div className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded print:bg-transparent">REPORTE GENERADO INTERNAMENTE</div>
+                        </div>
                     </div>
-                )}
-            </div>
-
-            {/* Footer */}
-            <div className="p-8 border-t border-slate-200 dark:border-slate-800 mt-auto flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] print:text-slate-600">
-                <div>CONFIDENCIAL - {companyName} {new Date().getFullYear()}</div>
-                <div className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded print:bg-transparent">REPORTE GENERADO INTERNAMENTE</div>
-            </div>
+                );
+            })}
         </div>
     );
 };
@@ -493,6 +487,11 @@ export function PhotoReportView({ company, items, onBack, onUpdateCompany }) {
     const [reportColor, setReportColor] = useState(company.reportColor || '#DB0011');
     const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
     const [reportMode, setReportMode] = useState('single'); // 'single' | 'full'
+    
+    // Preview Images State
+    const [previewImages, setPreviewImages] = useState([]);
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+    const [isGeneratingImages, setIsGeneratingImages] = useState(false);
      const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isDraggingLogo, setIsDraggingLogo] = useState(false);
     const logoDragCounter = useRef(0);
@@ -683,6 +682,63 @@ export function PhotoReportView({ company, items, onBack, onUpdateCompany }) {
         }
     };
 
+    const handleGenerateImages = async () => {
+        setIsGeneratingImages(true);
+        if (reportMode !== 'full') {
+            setReportMode('full');
+            // Allow React to mount all pages before capturing
+            setTimeout(() => captureAllPages(), 800);
+        } else {
+            setTimeout(() => captureAllPages(), 100);
+        }
+    };
+
+    const captureAllPages = async () => {
+        try {
+            const elements = document.querySelectorAll('.capture-page');
+            if (elements.length === 0) {
+                 alert("No se encontraron hojas para generar.");
+                 setIsGeneratingImages(false);
+                 return;
+            }
+            
+            const images = [];
+            for (let i = 0; i < elements.length; i++) {
+                const el = elements[i];
+                
+                // Forzar carga de imágenes antes de capturar
+                const imgs = Array.from(el.querySelectorAll('img'));
+                await Promise.all(imgs.map(img => {
+                    if (img.complete) return Promise.resolve();
+                    return new Promise(resolve => {
+                        img.onload = resolve;
+                        img.onerror = resolve; // Continue even if error
+                    });
+                }));
+
+                // Agregar timeout de 15 segundos por página para que no se quede colgado
+                const canvas = await Promise.race([
+                    html2canvas(el, { 
+                        scale: 1.5, 
+                        useCORS: true, 
+                        backgroundColor: '#ffffff',
+                        logging: false
+                    }),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout generando imagen')), 15000))
+                ]);
+                
+                images.push(canvas.toDataURL('image/jpeg', 0.8));
+            }
+            setPreviewImages(images);
+            setIsPreviewModalOpen(true);
+        } catch (error) {
+            console.error("Error generating images:", error);
+            alert("Tomó demasiado tiempo generar las imágenes o hubo un error de conexión con las fotos. Intenta nuevamente.");
+        } finally {
+            setIsGeneratingImages(false);
+        }
+    };
+
 
     return (
         <div
@@ -813,7 +869,18 @@ export function PhotoReportView({ company, items, onBack, onUpdateCompany }) {
                                 <span>Reporte Completo</span>
                             </button>
 
-                            {/* 1. Print Button (Desktop Standard) - ALWAYS VISIBLE TEXT */}
+                            {/* 1. Preview Images Button (For Copying) */}
+                            <button
+                                onClick={handleGenerateImages}
+                                disabled={isGeneratingImages}
+                                className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 bg-blue-600 text-white border border-blue-700 rounded font-bold hover:bg-blue-700 transition-all shadow-sm disabled:opacity-50"
+                                title="Generar imágenes para copiar a Word"
+                            >
+                                {isGeneratingImages ? <Loader2 className="animate-spin" size={18} /> : <ImageIcon size={18} />}
+                                <span>Vista Previa (Copiar)</span>
+                            </button>
+
+                            {/* 2. Print Button (Desktop Standard) - ALWAYS VISIBLE TEXT */}
                             <button
                                 onClick={() => window.print()}
                                 className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 bg-slate-100 text-slate-900 border border-slate-300 rounded font-bold hover:bg-slate-200 transition-all shadow-sm"
@@ -822,8 +889,6 @@ export function PhotoReportView({ company, items, onBack, onUpdateCompany }) {
                                 <Printer size={18} />
                                 <span>Imprimir Actual</span>
                             </button>
-
-                            {/* 2. Download PDF Button REMOVED (Handled by Main View) */}
                         </div>
                     )}
                 </div>
@@ -867,13 +932,20 @@ export function PhotoReportView({ company, items, onBack, onUpdateCompany }) {
                         {/* FAB to allow printing in full mode if nav is hidden or at bottom */}
                         <div className="fixed bottom-8 right-8 print:hidden flex flex-col gap-4">
                             <button
+                                onClick={handleGenerateImages}
+                                disabled={isGeneratingImages}
+                                className="flex items-center justify-center w-14 h-14 bg-blue-600 text-white rounded-full shadow-xl hover:bg-blue-700 transition-all z-50 disabled:opacity-50"
+                                title="Vista Previa (Copiar imágenes)"
+                            >
+                                {isGeneratingImages ? <Loader2 className="animate-spin" size={24} /> : <ImageIcon size={24} />}
+                            </button>
+                            <button
                                 onClick={() => window.print()}
                                 className="flex items-center justify-center w-14 h-14 bg-slate-900 text-white rounded-full shadow-xl hover:bg-slate-700 transition-all z-50"
                                 title="Imprimir Reporte Completo"
                             >
                                 <Printer size={24} />
                             </button>
-                            {/* Download FAB Removed */}
                         </div>
                     </>
                 ) : (
@@ -912,6 +984,38 @@ export function PhotoReportView({ company, items, onBack, onUpdateCompany }) {
                     </>
                 )}
             </div>
+
+            {/* Modal for Image Preview */}
+            {isPreviewModalOpen && (
+                <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center p-4 md:p-8 overflow-y-auto">
+                    <div className="w-full max-w-5xl flex justify-between items-center mb-6 sticky top-0 bg-black/90 py-4 z-10">
+                        <h2 className="text-2xl font-bold text-white">Vista Previa para Copiar</h2>
+                        <button 
+                            onClick={() => setIsPreviewModalOpen(false)}
+                            className="text-white bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg font-bold"
+                        >
+                            Cerrar
+                        </button>
+                    </div>
+                    <div className="w-full max-w-4xl flex flex-col gap-8 pb-12">
+                        <p className="text-slate-300 text-center bg-slate-800/50 p-4 rounded-lg">
+                            💡 <strong className="text-white">Haz clic derecho</strong> sobre cualquier imagen y selecciona <strong className="text-white">"Copiar imagen"</strong> para pegarla en Word.
+                        </p>
+                        {previewImages.map((imgSrc, idx) => (
+                            <div key={idx} className="relative group">
+                                <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-bold z-10">
+                                    Hoja {idx + 1}
+                                </div>
+                                <img 
+                                    src={imgSrc} 
+                                    alt={`Página ${idx + 1}`} 
+                                    className="w-full h-auto bg-white rounded-lg shadow-2xl"
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
