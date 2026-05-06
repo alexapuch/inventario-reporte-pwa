@@ -416,9 +416,6 @@ const ZoneReportPage = ({ zone, items, companyName, logoUrl }) => {
                              <ZoneReportHeader zone={zone} companyName={companyName} logoUrl={logoUrl} />
                         ) : (
                              <div className="print:mt-0">
-                                 <div className="print:hidden h-8 bg-slate-100 dark:bg-white/5 my-4 flex items-center justify-center text-xs text-slate-400 uppercase font-bold tracking-widest border-y border-dashed border-slate-300">
-                                     Salto de Página Automático
-                                 </div>
                                  <ZoneReportHeader
                                      zone={zone}
                                      companyName={companyName}
