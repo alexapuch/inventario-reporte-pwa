@@ -40,3 +40,5 @@ ui-debug.log*
 # OS
 Thumbs.db
 Desktop.ini
+
+.vercel

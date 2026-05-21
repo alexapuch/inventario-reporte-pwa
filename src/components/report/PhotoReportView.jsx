@@ -144,6 +144,11 @@ const ReportCoverPage = ({ company, totalItems, onUpdateCompany, isEditing = fal
         onUpdateCompany({ ...company, [field]: value });
     };
 
+    const handleFacadeUploadRef = useRef(handleFacadeUpload);
+    useEffect(() => {
+        handleFacadeUploadRef.current = handleFacadeUpload;
+    }, [handleFacadeUpload]);
+
     const today = new Date().toLocaleDateString('es-MX', {
         day: '2-digit',
         month: 'long',
@@ -157,7 +162,7 @@ const ReportCoverPage = ({ company, totalItems, onUpdateCompany, isEditing = fal
             const items = e.clipboardData.items;
             for (let i = 0; i < items.length; i++) {
                 if (items[i].type.indexOf('image') !== -1) {
-                    handleFacadeUpload(e);
+                    handleFacadeUploadRef.current(e);
                     break;
                 }
             }

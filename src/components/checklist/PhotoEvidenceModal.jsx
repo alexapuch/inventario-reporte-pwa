@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Upload, Check, Camera, Loader2, Clock, CloudOff, Trash2 } from 'lucide-react';
@@ -13,6 +13,12 @@ export function PhotoEvidenceModal({ isOpen, onClose, item, onUpdate }) {
     const [isBulkUploading, setIsBulkUploading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const dragCounter = React.useRef(0);
+
+    // Mantener una referencia actualizada a handleBulkUpload para evitar cierres obsoletos (stale closures)
+    const handleBulkUploadRef = useRef(handleBulkUpload);
+    useEffect(() => {
+        handleBulkUploadRef.current = handleBulkUpload;
+    }, [handleBulkUpload]);
 
     const handleDragEnter = (e) => {
         e.preventDefault();
@@ -64,7 +70,7 @@ export function PhotoEvidenceModal({ isOpen, onClose, item, onUpdate }) {
             }
         }
         if (files.length > 0) {
-            handleBulkUpload(files);
+            handleBulkUploadRef.current(files);
         }
     };
 

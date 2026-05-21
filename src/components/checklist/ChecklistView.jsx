@@ -83,7 +83,7 @@ const ZoneSizeIndicator = ({ urls }) => {
     return <span className="text-[11px] text-slate-400 font-medium tracking-wide">TOTAL NUBE: {sizeMB} MB</span>;
 };
 
-export function ChecklistView({ company, onUpdateCompany, onViewReport, onViewSummary, onViewGroupedSummary, onViewSketch }) {
+export function ChecklistView({ company, onUpdateCompany, onViewReport, onViewSummary, onViewGroupedSummary, onViewVisualSummary, onViewSketch }) {
     const [selectedZone, setSelectedZone] = useState(null);
     const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
     const [searchZone, setSearchZone] = useState('');
@@ -663,6 +663,9 @@ export function ChecklistView({ company, onUpdateCompany, onViewReport, onViewSu
                         </Button>
                         <Button onClick={() => onViewGroupedSummary()} className="bg-teal-600 hover:bg-teal-700 text-white shadow-md w-full sm:w-auto justify-center h-10">
                             <Grid size={18} className="mr-2" /> Tabla Cantidades
+                        </Button>
+                        <Button onClick={() => onViewVisualSummary()} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md w-full sm:w-auto justify-center h-10">
+                            <Grid size={18} className="mr-2" /> Tabla Logos
                         </Button>
                         <div className="relative w-full sm:w-auto">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />

@@ -11,6 +11,7 @@ import { ChecklistView } from './components/checklist/ChecklistView';
 import { PhotoReportView } from './components/report/PhotoReportView';
 import { SummaryTableView } from './components/report/SummaryTableView';
 import { GroupedSummaryTableView } from './components/report/GroupedSummaryTableView';
+import { VisualSummaryTableView } from './components/report/VisualSummaryTableView';
 import { Layout } from './components/layout/Layout';
 import { UserProfile } from './components/auth/UserProfile';
 import './index.css';
@@ -45,12 +46,12 @@ function AuthenticatedApp() {
   const [itemToMove, setItemToMove] = useState(null);
   const [newCompanyName, setNewCompanyName] = useState('');
   const [newProjectType, setNewProjectType] = useState('bank'); // 'bank' | 'custom' | 'folder'
-  const [viewMode, setViewMode] = useState('list'); // 'list', 'detail', 'report', 'summary', 'groupedSummary'
+  const [viewMode, setViewMode] = useState('list'); // 'list', 'detail', 'report', 'summary', 'groupedSummary', 'visualSummary'
 
   // Computed
   const activeCompany = companies.find(c => c.id === activeCompanyId);
   const currentFolder = companies.find(c => c.id === currentFolderId);
-  const view = activeCompanyId ? (['report', 'summary', 'groupedSummary', 'sketch'].includes(viewMode) ? viewMode : 'detail') : 'list';
+  const view = activeCompanyId ? (['report', 'summary', 'groupedSummary', 'visualSummary', 'sketch'].includes(viewMode) ? viewMode : 'detail') : 'list';
 
   // Handlers
   const handleCreateCompany = async () => {
@@ -264,6 +265,7 @@ function AuthenticatedApp() {
               onViewReport={() => setViewMode('report')}
               onViewSummary={() => setViewMode('summary')}
               onViewGroupedSummary={() => setViewMode('groupedSummary')}
+              onViewVisualSummary={() => setViewMode('visualSummary')}
               onViewSketch={() => setViewMode('sketch')}
             />
           )}
@@ -287,6 +289,14 @@ function AuthenticatedApp() {
 
           {view === 'groupedSummary' && activeCompany && (
             <GroupedSummaryTableView
+              company={activeCompany}
+              items={activeCompany.checklists || []}
+              onBack={() => setViewMode('detail')}
+            />
+          )}
+
+          {view === 'visualSummary' && activeCompany && (
+            <VisualSummaryTableView
               company={activeCompany}
               items={activeCompany.checklists || []}
               onBack={() => setViewMode('detail')}
