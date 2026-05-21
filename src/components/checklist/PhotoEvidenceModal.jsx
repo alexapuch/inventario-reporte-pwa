@@ -15,7 +15,7 @@ export function PhotoEvidenceModal({ isOpen, onClose, item, onUpdate }) {
     const dragCounter = React.useRef(0);
 
     // Mantener una referencia actualizada a handleBulkUpload para evitar cierres obsoletos (stale closures)
-    const handleBulkUploadRef = useRef(handleBulkUpload);
+    const handleBulkUploadRef = useRef(null);
     useEffect(() => {
         handleBulkUploadRef.current = handleBulkUpload;
     }, [handleBulkUpload]);
