@@ -14,11 +14,6 @@ export function PhotoEvidenceModal({ isOpen, onClose, item, onUpdate }) {
     const [isDragging, setIsDragging] = useState(false);
     const dragCounter = React.useRef(0);
 
-    // Mantener una referencia actualizada a handleBulkUpload para evitar cierres obsoletos (stale closures)
-    const handleBulkUploadRef = useRef(null);
-    useEffect(() => {
-        handleBulkUploadRef.current = handleBulkUpload;
-    }, [handleBulkUpload]);
 
     const handleDragEnter = (e) => {
         e.preventDefault();
@@ -251,6 +246,12 @@ export function PhotoEvidenceModal({ isOpen, onClose, item, onUpdate }) {
             setIsBulkUploading(false);
         }
     };
+
+    // Mantener una referencia actualizada a handleBulkUpload para evitar cierres obsoletos (stale closures)
+    const handleBulkUploadRef = useRef(null);
+    useEffect(() => {
+        handleBulkUploadRef.current = handleBulkUpload;
+    }, [handleBulkUpload]);
 
     const isPending = (url) => typeof url === 'string' && url.startsWith('PENDING_OFFLINE|');
 
